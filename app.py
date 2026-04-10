@@ -30,7 +30,7 @@ def to_b64(img: Image.Image, fmt: str = "PNG") -> str:
 def load_map() -> str:
     """Carga el mapa en su tamaño original"""
     path = os.path.join(STATIC, "hospital.png")
-    img = Image.open(path).convert("RGB")  # Sin resize
+    img = Image.open(path).convert("RGB")
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=False)
     return base64.b64encode(buf.getvalue()).decode()
@@ -47,47 +47,30 @@ def get_config() -> dict:
     S = 0.625
     def sc(x, y):
         return [round(x * S), round(y * S)]
-    
+
     # =========================================================
     # DATOS DEL DASHBOARD - 02 AL 08 DE MARZO 2026
     # =========================================================
-    
+
     # Distribución horaria de la SEMANA (total 305 pacientes)
     hourly_weekly = [10, 27, 42, 35, 33, 32, 20, 14, 17, 15, 22, 23, 8, 5, 2]
     hour_labels = ["6AM","7AM","8AM","9AM","10AM","11AM",
                    "12PM","1PM","2PM","3PM","4PM","5PM","6PM","7PM","8PM"]
-    
+
     total_weekly = sum(hourly_weekly)  # 305
-    
+
     # Día pico: Jueves (66 pacientes)
-    # Calcular distribución horaria para el día pico basada en porcentajes
     hourly_pct = [h / total_weekly for h in hourly_weekly]
     hourly_peak_day = [max(1, round(p * 66)) for p in hourly_pct]
-    
+
     # Ajustar para que sume exactamente 66
     diff = 66 - sum(hourly_peak_day)
     if diff != 0:
-        # Encontrar la hora con más pacientes y ajustar
         max_idx = hourly_peak_day.index(max(hourly_peak_day))
         hourly_peak_day[max_idx] += diff
-    
-    # Datos diarios (aproximados según el dashboard)
-    daily_patients = {
-        "Lunes": 42,
-        "Martes": 44,
-        "Miércoles": 45,
-        "Jueves": 66,   # Día pico
-        "Viernes": 48,
-        "Sábado": 35,
-        "Domingo": 25,
-    }
-    
-    print(f"✓ Total semana: {total_weekly} pacientes")
-    print(f"✓ Día pico (Jueves): {sum(hourly_peak_day)} pacientes")
-    print(f"✓ Distribución horaria día pico: {hourly_peak_day}")
-    
+
     # =========================================================
-    # TUS COORDENADAS DE SILLAS
+    # COORDENADAS DE SILLAS
     # =========================================================
     sillas_originales = [
         [178, 662], [245, 662], [319, 662],
@@ -96,10 +79,10 @@ def get_config() -> dict:
         [439, 777], [510, 777], [576, 777], [642, 777],
         [436, 868], [504, 868], [571, 868], [645, 868],
     ]
-    
+
     seats = [sc(x, y) for x, y in sillas_originales]
     door = sc(107, 500)
-    
+
     # Paths
     paths = {
         "pink_to_desk": [door, sc(199,506), sc(185,392)],
@@ -112,7 +95,7 @@ def get_config() -> dict:
         "to_lab": [sc(400,700), sc(1143,545), sc(1143,654), sc(1596,654), sc(1594,852)],
         "exit": [sc(1598,654), sc(1782,654)],
     }
-    
+
     # Zonas
     zones = {
         "door":      {"x": sc(107,500)[0], "y": sc(107,500)[1], "r": 20, "color": "#fbbf24", "label": "Entrada"},
@@ -122,9 +105,8 @@ def get_config() -> dict:
         "xray":      {"x": sc(1553,351)[0], "y": sc(1553,351)[1], "r": 20, "color": "#8b5cf6", "label": "Rayos X"},
         "lab":       {"x": sc(1594,852)[0], "y": sc(1594,852)[1], "r": 20, "color": "#f97316", "label": "Laboratorio"},
     }
-    
+
     return {
-        # Datos para mostrar en el dashboard
         "total_weekly": total_weekly,
         "total_daily": sum(hourly_peak_day),
         "avg_age": 55.7,
@@ -132,14 +114,10 @@ def get_config() -> dict:
         "peak_hour_count": 42,
         "peak_day": "Jueves",
         "peak_day_count": 66,
-        
-        # Datos horarios
-        "hourly_weekly": hourly_weekly,      # Para la gráfica de barras
-        "hourly_daily": hourly_peak_day,     # Para spawnear pacientes (día pico)
+        "hourly_weekly": hourly_weekly,
+        "hourly_daily": hourly_peak_day,
         "hour_labels": hour_labels,
-        
-        # Configuración de simulación
-        "sim_duration": 15 * 60,  # 15 horas (6AM a 9PM)
+        "sim_duration": 15 * 60,
         "person_size": 55,
         "door": door,
         "paths": paths,
@@ -147,10 +125,18 @@ def get_config() -> dict:
         "seats": seats,
     }
 
+
 # ── Rutas ────────────────────────────────────────────────
 
 @app.route("/")
+def landing():
+    """Página de inicio — presenta el sistema de pre-admisión."""
+    return render_template("landing.html")
+
+
+@app.route("/simulacion")
 def index():
+    """Simulación visual del flujo de pacientes."""
     return render_template("index.html")
 
 
@@ -193,3 +179,4 @@ if __name__ == "__main__":
 
     print("  → http://localhost:5000\n")
     app.run(debug=True, port=5000)
+   
