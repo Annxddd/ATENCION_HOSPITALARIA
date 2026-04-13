@@ -178,6 +178,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/simulacion")
+def simulacion():
+    return render_template("landing.html")
+
+
 @app.route("/assets")
 def assets():
     return jsonify({
